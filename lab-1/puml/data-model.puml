@@ -1,0 +1,35 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam rectangleBackgroundColor #EEF4F8
+skinparam rectangleBorderColor #8FA8BD
+
+title Модель данных
+
+rectangle "**events**\nid, title, venue, starts_at\non_sale_at, description" as events
+rectangle "**sectors**\nid, event_id, title, price, capacity\n\n+ persons_per_ticket" as sectors
+rectangle "**tickets**\nid, event_id, sector_id\nrow, seat, status, order_id" as tickets
+rectangle "**orders**\nid, user_id, event_id, status\nidempotency_key, created_at, expires_at" as orders
+rectangle "**payments**\nid, order_id, psp_reference\nstatus, amount" as payments
+rectangle "**admission_passes**\nid, ticket_id, person_no" as passes
+
+tickets --> passes : 1 → 0..N
+events --> sectors : 1 → N
+events --> tickets : 1 → N
+sectors --> tickets : 1 → N
+events --> orders : 1 → N
+orders --> tickets : 1 → N
+orders --> payments : 1 → N
+
+legend bottom
+Добавленное поле: //sectors.persons_per_ticket//
+Также добавлена новая сущность //admission_passes// связанная с выпуском нескольких пропусков для билета:
+После оплаты на единицу продажи выпускается persons_per_ticket входных документо
+
+capacity - вместимость сектора в единицах продажи
+persons_per_ticket - число людей по одной единице продажи (f.ex. в одной ложе помешяется 5 человек)
+price - цена одной единицы продажи
+
+endlegend
+@enduml
