@@ -1,0 +1,45 @@
+@startuml
+title 2.5. Жизненный цикл билета
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam state {
+  BackgroundColor #EEF4F8
+  BorderColor #8FA8BD
+  ArrowColor #52677A
+}
+
+[*] --> Free
+
+state "Свободен\nfree" as Free
+state "Зарезервирован\nheld" as Held
+state "Продан\nsold" as Sold
+state "Возврат запрошен" as RefundPending
+state "Недоступен\nblocked" as Blocked
+
+Free --> Held : Создан резерв
+Held --> Sold : Оплата подтверждена
+Held --> Free : TTL истёк / заказ отменён
+
+Sold --> RefundPending : Запрос возврата
+RefundPending --> Sold : Возврат отклонён
+RefundPending --> Free : Возврат подтверждён\nМесто можно перепродать
+
+Free --> Blocked : Место / событие отменено
+Held --> Blocked : Отмена события
+Sold --> Blocked : Отмена события\nВозврат обрабатывается
+
+note right of RefundPending
+Место остаётся недоступным
+до подтверждения возврата PSP.
+
+Операция фиксируется в refunds.
+end note
+
+note bottom of Free
+История продажи сохраняется
+в order_items и refund_items.
+end note
+
+@enduml

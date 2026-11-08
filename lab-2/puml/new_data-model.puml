@@ -1,0 +1,60 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam rectangleBackgroundColor #EEF4F8
+skinparam rectangleBorderColor #8FA8BD
+
+title Модель данных — лабораторная 2
+
+rectangle "**events**\nid, title, venue, starts_at\non_sale_at, description, status" as events
+rectangle "**sectors**\nid, event_id, title, price, capacity\npersons_per_ticket" as sectors
+rectangle "**tickets**\nid, event_id, sector_id\nrow, seat, status" as tickets
+rectangle "**orders**\nid, user_id, event_id, status\nidempotency_key, created_at, expires_at" as orders
+rectangle "**order_items**\nid, order_id, ticket_id\nprice, status" as items
+rectangle "**payments**\nid, order_id, psp_reference\nstatus, amount" as payments
+rectangle "**admission_passes**\nid, order_item_id, person_no\nstatus" as passes
+rectangle "**refunds**\nid, order_id, payment_id\npsp_reference, amount, status\ncreated_at, reason" as refunds
+rectangle "**refund_items**\nrefund_id, order_item_id" as refund_items
+
+rectangle "**payouts**\nid, event_id, reference\namount, status, paid_at" as payouts
+
+events --> sectors : 1 → N
+events --> tickets : 1 → N
+events --> orders : 1 → N
+events --> payouts : 1 → 0..N
+
+sectors --> tickets : 1 → N
+
+orders --> items : 1 → N
+tickets --> items : 1 → 0..N
+
+orders --> payments : 1 → 0..N
+
+items --> passes : 1 → 0..N
+
+orders --> refunds : 1 → 0..N
+payments --> refunds : 1 → 0..N
+refunds --> refund_items : 1 → 0..N
+items --> refund_items : 1 → 0..N
+
+legend bottom
+**Изменения в рамках 2 лабы:**
+
+- tickets - единицы инвентаря и их текущая доступность
+- order_items - связь места с конкретным заказом,
+  включая историю предыдущих продаж
+- admission_passes - пропуска конкретной покупки
+- refunds / refund_items - возвраты и их состав
+- payouts - выплаты организаторам
+
+Дополнительно:
+- events.status - позволяет отменять событие
+- tickets.status - free / held / sold / blocked
+- order_items.status - held / sold / refunded / cancelled
+- admission_passes.status - active / revoked
+
+История сохраняется: при возврате запись order_items
+не удаляется, а место может быть продано повторно.
+endlegend
+@enduml

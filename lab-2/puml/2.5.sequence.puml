@@ -1,0 +1,59 @@
+
+@startuml
+title 2.5. Обработка возврата билетов
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam sequence {
+  ArrowColor #52677A
+  LifeLineBorderColor #8FA8BD
+  ParticipantBackgroundColor #EEF4F8
+  ParticipantBorderColor #8FA8BD
+}
+
+actor "Инициатор\nвозврата" as User
+participant "Билетёр" as App
+database "PostgreSQL" as DB
+participant "PSP" as PSP
+
+User -> App : Запрос возврата\n(заказ, выбранные билеты)
+
+App -> DB : Проверить заказ,\norder_items и условия возврата
+DB --> App : Данные заказа и оплаты
+
+alt Возврат разрешён
+    App -> DB : Создать refunds (pending)\nи refund_items
+    DB --> App : Идентификатор возврата
+
+    App -> PSP : Запрос возврата денег\n(сумма, ключ идемпотентности)
+
+    alt Возврат подтверждён
+        PSP --> App : Успешный возврат
+
+        App -> DB : Транзакция:\nrefunds = succeeded\norder_items = refunded\nпропуска = revoked
+        App -> DB : Освободить tickets\nили заблокировать их
+        DB --> App : Изменения сохранены
+
+        App --> User : Возврат выполнен
+
+    else Возврат отклонён
+        PSP --> App : Отказ в возврате
+        App -> DB : refunds = failed
+        App --> User : Возврат не выполнен
+
+    else Нет окончательного ответа
+        PSP --x App : Подтверждение не получено
+        App -> DB : Сохранить pending
+        App --> User : Возврат обрабатывается
+        note over App, PSP
+        Статус уточняется через PSP.
+        Повторный запрос идемпотентен.
+        end note
+    end
+
+else Возврат запрещён
+    App --> User : Отказ с указанием причины
+end
+
+@enduml
