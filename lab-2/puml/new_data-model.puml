@@ -18,11 +18,14 @@ rectangle "**refunds**\nid, order_id, payment_id\npsp_reference, amount, status\
 rectangle "**refund_items**\nrefund_id, order_item_id" as refund_items
 
 rectangle "**payouts**\nid, event_id, reference\namount, status, paid_at" as payouts
+rectangle "**payout_items**\npayout_id, order_id, amount" as payout_items
 
 events --> sectors : 1 → N
 events --> tickets : 1 → N
 events --> orders : 1 → N
 events --> payouts : 1 → 0..N
+payouts --> payout_items : 1 → 0..N
+orders --> payout_items : 1 → 0..N
 
 sectors --> tickets : 1 → N
 
@@ -46,12 +49,14 @@ legend bottom
   включая историю предыдущих продаж
 - admission_passes - пропуска конкретной покупки
 - refunds / refund_items - возвраты и их состав
-- payouts - выплаты организаторам
+- payouts / payout_items - выплаты организаторам
+  и связь выплат с заказами
 
 Дополнительно:
 - events.status - позволяет отменять событие
 - tickets.status - free / held / sold / blocked
 - order_items.status - held / sold / refunded / cancelled
+- order_items: UNIQUE(ticket_id) WHERE status IN (held, sold)
 - admission_passes.status - active / revoked
 
 История сохраняется: при возврате запись order_items
