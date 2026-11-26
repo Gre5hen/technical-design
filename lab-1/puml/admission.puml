@@ -1,0 +1,33 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam rectangleBackgroundColor #EEF4F8
+skinparam rectangleBorderColor #8FA8BD
+top to bottom direction
+
+title Допуск перед выбором билетов
+
+rectangle "**Просмотр описания события**\nБез очереди" as view
+rectangle "**Нажать «Купить билет»**" as buy
+rectangle "**Можно допустить пользователя?**\nС учётом нагрузки и порядка очереди" as decision
+rectangle "**Зал ожидания**\nСохранение позиции\nПериодическая проверка допуска" as wait
+rectangle "**Выбор сектора и места**" as select
+rectangle "**Запрос резервирования**" as reserve
+
+view --> buy
+buy --> decision
+
+decision --> select : Да
+decision --> wait : Нет
+wait --> select : Очередь подошла,\nдопуск разрешён
+
+select --> reserve
+
+legend bottom
+При заполнении или недоступности очереди
+пользователь получает поясняющее сообщение.
+Допуск к выбору не резервирует билет.
+endlegend
+
+@enduml

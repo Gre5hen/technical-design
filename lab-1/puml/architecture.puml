@@ -1,0 +1,34 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam activityBackgroundColor #EEF4F8
+skinparam activityBorderColor #8FA8BD
+skinparam activityDiamondBackgroundColor #EEF4F8
+skinparam activityDiamondBorderColor #8FA8BD
+skinparam ArrowColor #526477
+
+title Общий сценарий работы
+
+start
+
+:Открыть страницу события;
+:Просмотреть описание;
+:Нажать «Купить билет»;
+
+if (Можно допустить пользователя\nк выбору билетов?) then (да)
+else (нет)
+  :Ожидать в очереди;
+  :Получить допуск;
+endif
+
+:Выбрать сектор;
+
+:Получить данные выбранного сектора:\nостаток и схему доступных мест;
+
+:Выбрать место, ложу\nили количество входных билетов;
+
+:Отправить запрос\nна резервирование;
+
+stop
+@enduml

@@ -1,0 +1,51 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam defaultFontName SansSerif
+skinparam rectangleBackgroundColor #EEF4F8
+skinparam rectangleBorderColor #8FA8BD
+top to bottom direction
+
+title Чтение и обновление кэша
+
+rectangle "**Запрос данных**" as request
+
+rectangle "**Есть свежая копия?**" as fresh
+rectangle "**Вернуть свежие данные**" as cached
+
+rectangle "**Этот ключ уже обновляется?**\nПроверка и выбор ответственного\nвыполняются атомарно" as updating
+
+rectangle "**Стать ответственным**\nПрочитать данные из БД\nс учётом ограничений нагрузки" as fetch
+
+rectangle "**Присоединиться к ожиданию**\nНе запускать повторное чтение БД" as wait
+
+rectangle "**Обновление успешно**\nОтветственный сохраняет данные в кэш\nРезультат получают все ожидающие" as success
+
+rectangle "**Ошибка или истекло ожидание**\nЕсть старая копия\nдопустимого возраста?" as fallback
+
+rectangle "**Вернуть старую копию**\nС пометкой об устаревании" as stale
+
+rectangle "**Сообщить о временной\nнедоступности данных**" as unavailable
+
+request --> fresh
+fresh --> cached : Да
+fresh --> updating : Нет
+
+updating --> wait : Да
+updating --> fetch : Нет
+
+fetch --> success : Успех
+wait --> success : Результат получен
+
+fetch --> fallback : Не удалось обновить
+wait --> fallback : Ошибка / тайм-аут
+
+fallback --> stale : Да
+fallback --> unavailable : Нет
+
+legend bottom
+Объединяются запросы одного ключа внутри экземпляра приложения.
+Возраст старой копии ограничен значениями из таблицы кэширования.
+endlegend
+
+@enduml
